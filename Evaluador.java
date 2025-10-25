@@ -4,72 +4,148 @@
  * sus valores y validar el uso correcto de las mismas.
  */
 public class Evaluador {
-    // Tabla de símbolos (variables declaradas con sus valores)
     private TablaSimbolos ts = new TablaSimbolos();
+    private int blockDepth = 0;
+    private boolean returned = false;
+    private int returnValue = 0;
 
-    // Evalúa recursivamente un nodo del AST.
-    
     public int evaluar(Nodo ast) {
-        if (ast == null) return 0; // nodo nulo
+        if (ast == null) return 0;
+        if (returned) return returnValue;
 
         switch (ast.nombre) {
-            // Nodos estructurales, se evalúan sus hijos
             case "Programa":
+                return evaluarHijos(ast);
+
             case "Bloque":
+                blockDepth++;
+                int res = evaluarHijos(ast);
+                blockDepth--;
+                return res;
+
             case "Declaraciones":
             case "Sentencias":
                 return evaluarHijos(ast);
 
-            // Declaración de variables 
             case "Declaracion":
-                String var = ast.hijos.get(1).valor;   
-                ts.declarar(var, ast.linea);           // registrar variable en tabla
+                if (blockDepth != 1) {
+                    throw new RuntimeException(
+                            "Error semántico (línea " + ast.linea + "): declaración fuera del bloque global no permitida.");
+                }
+
+                String var = ast.hijos.get(1).valor;
+                ts.declarar(var, ast.linea);
+
+                if (ast.hijos.size() > 2) {
+                    int valorInit = evaluar(ast.hijos.get(2));
+                    ts.asignar(var, valorInit, ast.linea);
+                }
                 return 0;
 
-            // Asignación de variables 
             case "Asignacion":
-                String nombreVar = ast.hijos.get(0).valor; // hijo 0 = nombre de la variable
-                int valor = evaluar(ast.hijos.get(1));     // hijo 1 = expresión a evaluar
-                ts.asignar(nombreVar, valor, ast.linea);   // actualizar valor en tabla
+                String nombreVar = ast.hijos.get(0).valor;
+                int valor = evaluar(ast.hijos.get(1));
+                ts.asignar(nombreVar, valor, ast.linea);
                 return valor;
 
-            // Sentencia return 
             case "Return":
-                // Si no hay expresión retorna 0 
-                return ast.hijos.isEmpty() ? 0 : evaluar(ast.hijos.get(0));
+                returnValue = ast.hijos.isEmpty() ? 0 : evaluar(ast.hijos.get(0));
+                returned = true;
+                return returnValue;
 
             case "Numero":
                 return Integer.parseInt(ast.valor);
 
-            // Identificadores 
+            case "True":
+            case "true":
+            case "BooleanoTrue":
+                return 1;
+
+            case "False":
+            case "false":
+            case "BooleanoFalse":
+                return 0;
+
             case "Identificador":
                 return ts.obtener(ast.valor, ast.linea);
 
-            // Expresiones aritméticas
             case "Suma":
                 return evaluar(ast.hijos.get(0)) + evaluar(ast.hijos.get(1));
+
+            case "Resta":
+                return evaluar(ast.hijos.get(0)) - evaluar(ast.hijos.get(1));
 
             case "Multiplicacion":
                 return evaluar(ast.hijos.get(0)) * evaluar(ast.hijos.get(1));
 
-            // Cualquier otro nodo → evalúa sus hijos
+            case "Division":
+                int divisor = evaluar(ast.hijos.get(1));
+                if (divisor == 0)
+                    throw new RuntimeException("Error: división por cero (línea " + ast.linea + ")");
+                return evaluar(ast.hijos.get(0)) / divisor;
+
+            case "Modulo":
+                int mod = evaluar(ast.hijos.get(1));
+                if (mod == 0)
+                    throw new RuntimeException("Error: módulo por cero (línea " + ast.linea + ")");
+                return evaluar(ast.hijos.get(0)) % mod;
+
+            case "Menor":
+                return evaluar(ast.hijos.get(0)) < evaluar(ast.hijos.get(1)) ? 1 : 0;
+
+            case "Mayor":
+                return evaluar(ast.hijos.get(0)) > evaluar(ast.hijos.get(1)) ? 1 : 0;
+
+            case "Igual":
+                return evaluar(ast.hijos.get(0)) == evaluar(ast.hijos.get(1)) ? 1 : 0;
+
+            case "And":
+            case "&&":
+            case "Conjuncion":
+                return (evaluar(ast.hijos.get(0)) != 0 && evaluar(ast.hijos.get(1)) != 0) ? 1 : 0;
+
+            case "Or":
+            case "||":
+            case "Disyuncion":
+                return (evaluar(ast.hijos.get(0)) != 0 || evaluar(ast.hijos.get(1)) != 0) ? 1 : 0;
+
+            case "Not":
+            case "!":
+            case "Negacion":
+                return (evaluar(ast.hijos.get(0)) == 0) ? 1 : 0;
+
+            case "MenosUnario":
+            case "Uminus":
+                return -evaluar(ast.hijos.get(0));
+
+            case "If":
+                int cond = evaluar(ast.hijos.get(0));
+                if (cond != 0)
+                    evaluar(ast.hijos.get(1));
+                else if (ast.hijos.size() > 2)
+                    evaluar(ast.hijos.get(2));
+                return 0;
+
+            case "While":
+                while (evaluar(ast.hijos.get(0)) != 0 && !returned) {
+                    evaluar(ast.hijos.get(1));
+                }
+                return 0;
+
             default:
                 return evaluarHijos(ast);
         }
     }
 
-    // Evalúa recursivamente todos los hijos de un nodo, devuelve el resultado del último hijo (para sentencias secuenciales).
-   
     private int evaluarHijos(Nodo n) {
         int result = 0;
         for (Nodo h : n.hijos) {
-            result = evaluar(h); // se actualiza con cada hijo
+            if (returned) break;
+            result = evaluar(h);
         }
         return result;
     }
 
-    // Muestra en consola el estado actual de la tabla de símbolos.
-    
     public void mostrarTabla() {
         System.out.println("Tabla de símbolos: " + ts);
     }

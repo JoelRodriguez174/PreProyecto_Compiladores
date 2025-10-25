@@ -6,25 +6,38 @@
 /** CUP generated interface containing symbol constants. */
 public interface sym {
   /* terminals */
-  public static final int LLAVE_ABRE = 16;
-  public static final int LLAVE_CIERRA = 17;
+  public static final int LLAVE_ABRE = 29;
+  public static final int OPERADOR_NOT = 26;
+  public static final int ELSE = 11;
+  public static final int LLAVE_CIERRA = 30;
+  public static final int OPERADOR_MODULO = 20;
   public static final int INT = 4;
-  public static final int OPERADOR_MULTIPLICACION = 13;
-  public static final int OPERADOR_ASIGNACION = 11;
-  public static final int PARENTESIS_ABRE = 14;
+  public static final int THEN = 10;
+  public static final int OPERADOR_MULTIPLICACION = 18;
+  public static final int WHILE = 12;
+  public static final int OPERADOR_ASIGNACION = 15;
+  public static final int PARENTESIS_ABRE = 27;
   public static final int RETURN = 8;
-  public static final int PARENTESIS_CIERRA = 15;
-  public static final int TRUE = 9;
-  public static final int OPERADOR_SUMA = 12;
+  public static final int PARENTESIS_CIERRA = 28;
+  public static final int TRUE = 13;
+  public static final int IF = 9;
+  public static final int OPERADOR_RESTA = 17;
+  public static final int OPERADOR_SUMA = 16;
+  public static final int OPERADOR_OR = 25;
+  public static final int OPERADOR_MENOR = 21;
   public static final int EOF = 0;
   public static final int MAIN = 7;
-  public static final int FALSE = 10;
+  public static final int FALSE = 14;
   public static final int error = 1;
   public static final int NUMERO = 3;
+  public static final int OPERADOR_DIVISION = 19;
   public static final int IDENTIFICADOR = 2;
-  public static final int PUNTO_COMA = 18;
+  public static final int PUNTO_COMA = 31;
   public static final int BOOL = 5;
+  public static final int OPERADOR_AND = 24;
   public static final int VOID = 6;
+  public static final int OPERADOR_IGUALDAD = 23;
+  public static final int OPERADOR_MAYOR = 22;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
@@ -35,11 +48,24 @@ public interface sym {
   "VOID",
   "MAIN",
   "RETURN",
+  "IF",
+  "THEN",
+  "ELSE",
+  "WHILE",
   "TRUE",
   "FALSE",
   "OPERADOR_ASIGNACION",
   "OPERADOR_SUMA",
+  "OPERADOR_RESTA",
   "OPERADOR_MULTIPLICACION",
+  "OPERADOR_DIVISION",
+  "OPERADOR_MODULO",
+  "OPERADOR_MENOR",
+  "OPERADOR_MAYOR",
+  "OPERADOR_IGUALDAD",
+  "OPERADOR_AND",
+  "OPERADOR_OR",
+  "OPERADOR_NOT",
   "PARENTESIS_ABRE",
   "PARENTESIS_CIERRA",
   "LLAVE_ABRE",

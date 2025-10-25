@@ -1,6 +1,5 @@
 import java_cup.runtime.*;
 import java.util.*;
-// No hace falta importar Nodo, está en la misma carpeta
 
 parser code {:
     public void report_error(String message, Object info) {
@@ -10,7 +9,7 @@ parser code {:
             System.err.println("En línea: " + (s.left + 1) + ", columna: " + (s.right + 1));
         }
     }
-    
+
     public void report_fatal_error(String message, Object info) {
         report_error(message, info);
         System.exit(1);
@@ -21,8 +20,11 @@ parser code {:
 terminal String IDENTIFICADOR;
 terminal String NUMERO;
 terminal INT, BOOL, VOID, MAIN, RETURN;
+terminal IF, THEN, ELSE, WHILE;
 terminal TRUE, FALSE;
-terminal OPERADOR_ASIGNACION, OPERADOR_SUMA, OPERADOR_MULTIPLICACION;
+terminal OPERADOR_ASIGNACION, OPERADOR_SUMA, OPERADOR_RESTA, OPERADOR_MULTIPLICACION, OPERADOR_DIVISION, OPERADOR_MODULO;
+terminal OPERADOR_MENOR, OPERADOR_MAYOR, OPERADOR_IGUALDAD;
+terminal OPERADOR_AND, OPERADOR_OR, OPERADOR_NOT;
 terminal PARENTESIS_ABRE, PARENTESIS_CIERRA, LLAVE_ABRE, LLAVE_CIERRA, PUNTO_COMA;
 
 /* === NO TERMINALES === */
@@ -37,17 +39,22 @@ non terminal Nodo Sentencia;
 non terminal Nodo Asignacion;
 non terminal Nodo Return;
 non terminal Nodo Expresion;
-non terminal Nodo Termino;
 non terminal Nodo Factor;
 
 /* === PRECEDENCIA === */
-precedence left OPERADOR_SUMA;
-precedence left OPERADOR_MULTIPLICACION;
+precedence left OPERADOR_OR;
+precedence left OPERADOR_AND;
+precedence left OPERADOR_IGUALDAD;
+precedence left OPERADOR_MENOR, OPERADOR_MAYOR;
+precedence left OPERADOR_SUMA, OPERADOR_RESTA;
+precedence left OPERADOR_MULTIPLICACION, OPERADOR_DIVISION, OPERADOR_MODULO;
+precedence left ELSE;
+precedence right OPERADOR_NOT;
 
 /* === PUNTO DE INICIO === */
 start with Programa;
 
-/* === REGLAS DE PRODUCCIÓN === */
+/* === PRODUCCIONES === */
 
 Programa ::= TipoMain:tm MAIN:m PARENTESIS_ABRE PARENTESIS_CIERRA Bloque:bloq
     {:
@@ -94,6 +101,14 @@ Declaracion ::= Tipo:t IDENTIFICADOR:id PUNTO_COMA
         decl.agregarHijo(new Nodo("Identificador", id, idleft, idright));
         RESULT = decl;
     :}
+    | Tipo:t IDENTIFICADOR:id OPERADOR_ASIGNACION Expresion:e PUNTO_COMA
+    {:
+        Nodo decl = new Nodo("Declaracion", null, idleft, idright);
+        decl.agregarHijo(t);
+        decl.agregarHijo(new Nodo("Identificador", id, idleft, idright));
+        decl.agregarHijo(e);
+        RESULT = decl;
+    :}
 ;
 
 Tipo ::= INT:i
@@ -117,6 +132,30 @@ Sentencia ::= Asignacion:a
     {: RESULT = a; :}
     | Return:r
     {: RESULT = r; :}
+    | IF:iff PARENTESIS_ABRE Expresion:cond PARENTESIS_CIERRA THEN:t Sentencia:s1
+          {:
+              Nodo ifn = new Nodo("If", null, iffleft, iffright);
+              ifn.agregarHijo(cond);
+              ifn.agregarHijo(s1);
+              RESULT = ifn;
+          :}
+      | IF:iff PARENTESIS_ABRE Expresion:cond PARENTESIS_CIERRA THEN:t Sentencia:s1 ELSE:e Sentencia:s2
+          {:
+              Nodo ifelse = new Nodo("If", null, iffleft, iffright);
+              ifelse.agregarHijo(cond);
+              ifelse.agregarHijo(s1);
+              ifelse.agregarHijo(s2);
+              RESULT = ifelse;
+          :}
+    | WHILE:w PARENTESIS_ABRE Expresion:cond PARENTESIS_CIERRA Sentencia:s
+        {:
+            Nodo whileN = new Nodo("While", null, wleft, wright);
+            whileN.agregarHijo(cond);
+            whileN.agregarHijo(s);
+            RESULT = whileN;
+        :}
+    | Bloque:b
+        {: RESULT = b; :}
 ;
 
 Asignacion ::= IDENTIFICADOR:id OPERADOR_ASIGNACION Expresion:expr PUNTO_COMA
@@ -140,36 +179,53 @@ Return ::= RETURN:r Expresion:e PUNTO_COMA
     :}
 ;
 
-Expresion ::= Expresion:e1 OPERADOR_SUMA:s Termino:e2
-    {:
-        Nodo suma = new Nodo("Suma", null, sleft, sright);
-        suma.agregarHijo(e1);
-        suma.agregarHijo(e2);
-        RESULT = suma;
-    :}
-    | Termino:t
-    {: RESULT = t; :}
-;
+/* === Expresiones === */
 
-Termino ::= Termino:t1 OPERADOR_MULTIPLICACION:m Factor:f
-    {:
-        Nodo mult = new Nodo("Multiplicacion", null, mleft, mright);
-        mult.agregarHijo(t1);
-        mult.agregarHijo(f);
-        RESULT = mult;
-    :}
-    | Factor:f
-    {: RESULT = f; :}
-;
-
-Factor ::= PARENTESIS_ABRE Expresion:e PARENTESIS_CIERRA
-    {: RESULT = e; :}
+Expresion ::=
+      Expresion:e1 OPERADOR_SUMA:s Expresion:e2
+        {: Nodo n = new Nodo("Suma", null, sleft, sright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_RESTA:r Expresion:e2
+        {: Nodo n = new Nodo("Resta", null, rleft, rright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_MULTIPLICACION:m Expresion:e2
+        {: Nodo n = new Nodo("Multiplicacion", null, mleft, mright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_DIVISION:d Expresion:e2
+        {: Nodo n = new Nodo("Division", null, dleft, dright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_MODULO:mod Expresion:e2
+        {: Nodo n = new Nodo("Modulo", null, modleft, modright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_MENOR:men Expresion:e2
+        {: Nodo n = new Nodo("Menor", null, menleft, menright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_MAYOR:may Expresion:e2
+        {: Nodo n = new Nodo("Mayor", null, mayleft, mayright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_IGUALDAD:eq Expresion:e2
+        {: Nodo n = new Nodo("Igual", null, eqleft, eqright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_AND:a Expresion:e2
+        {: Nodo n = new Nodo("And", null, aleft, aright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | Expresion:e1 OPERADOR_OR:o Expresion:e2
+        {: Nodo n = new Nodo("Or", null, oleft, oright);
+           n.agregarHijo(e1); n.agregarHijo(e2); RESULT = n; :}
+    | OPERADOR_NOT:n Expresion:e
+        {: Nodo n2 = new Nodo("Not", null, nleft, nright);
+           n2.agregarHijo(e); RESULT = n2; :}
+    | OPERADOR_RESTA:r Factor:f
+        {: Nodo n = new Nodo("MenosUnario", null, rleft, rright);
+           n.agregarHijo(f); RESULT = n; :}
+    | PARENTESIS_ABRE Expresion:e PARENTESIS_CIERRA
+        {: RESULT = e; :}
     | NUMERO:num
-    {: RESULT = new Nodo("Numero", num, numleft, numright); :}
+        {: RESULT = new Nodo("Numero", num, numleft, numright); :}
     | IDENTIFICADOR:id
-    {: RESULT = new Nodo("Identificador", id, idleft, idright); :}
+        {: RESULT = new Nodo("Identificador", id, idleft, idright); :}
     | TRUE:t
-    {: RESULT = new Nodo("Bool","true", tleft, tright); :}
+        {: RESULT = new Nodo("True","true", tleft, tright); :}
     | FALSE:f
-    {: RESULT = new Nodo("Bool","false", fleft, fright); :}
+        {: RESULT = new Nodo("False","false", fleft, fright); :}
 ;

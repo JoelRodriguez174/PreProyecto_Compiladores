@@ -33,29 +33,44 @@
 
 %%
 
-[ \t\r\n]+                     { /* ignorar espacios */ }
+[ \t\r\n]+                      { /* ignorar espacios y saltos */ }
+"//".*                          { /* comentario de una línea */ }
 
-"int"                          { return token("PALABRA_RESERVADA", yytext()); }
-"bool"                         { return token("PALABRA_RESERVADA", yytext()); }
-"void"                         { return token("PALABRA_RESERVADA", yytext()); }
-"main"                         { return token("PALABRA_RESERVADA", yytext()); }
-"return"                       { return token("PALABRA_RESERVADA", yytext()); }
-"true"                         { return token("CONSTANTE_LOGICA", yytext()); }
-"false"                        { return token("CONSTANTE_LOGICA", yytext()); }
+"int"                           { return token("PALABRA_RESERVADA", yytext()); }
+"bool"                          { return token("PALABRA_RESERVADA", yytext()); }
+"void"                          { return token("PALABRA_RESERVADA", yytext()); }
+"main"                          { return token("PALABRA_RESERVADA", yytext()); }
+"return"                        { return token("PALABRA_RESERVADA", yytext()); }
+"if"                            { return token("PALABRA_RESERVADA", yytext()); }
+"then"                          { return token("PALABRA_RESERVADA", yytext()); }
+"else"                          { return token("PALABRA_RESERVADA", yytext()); }
+"while"                         { return token("PALABRA_RESERVADA", yytext()); }
 
-"="                            { return token("OPERADOR_ASIGNACION", yytext()); }
-"+"                            { return token("OPERADOR_SUMA", yytext()); }
-"*"                            { return token("OPERADOR_MULTIPLICACION", yytext()); }
+"true"                          { return token("CONSTANTE_LOGICA", yytext()); }
+"false"                         { return token("CONSTANTE_LOGICA", yytext()); }
 
-"("                            { return token("PARENTESIS_ABRE", yytext()); }
-")"                            { return token("PARENTESIS_CIERRA", yytext()); }
-"{"                            { return token("LLAVE_ABRE", yytext()); }
-"}"                            { return token("LLAVE_CIERRA", yytext()); }
-";"                            { return token("PUNTO_COMA", yytext()); }
+"=="                            { return token("OPERADOR_IGUALDAD", yytext()); }
+"&&"                            { return token("OPERADOR_AND", yytext()); }
+"||"                            { return token("OPERADOR_OR", yytext()); }
+"="                             { return token("OPERADOR_ASIGNACION", yytext()); }
+"+"                             { return token("OPERADOR_SUMA", yytext()); }
+"-"                             { return token("OPERADOR_RESTA", yytext()); }
+"*"                             { return token("OPERADOR_MULTIPLICACION", yytext()); }
+"/"                             { return token("OPERADOR_DIVISION", yytext()); }
+"%"                             { return token("OPERADOR_MODULO", yytext()); }
+"!"                             { return token("OPERADOR_NOT", yytext()); }
+"<"                             { return token("OPERADOR_MENOR", yytext()); }
+">"                             { return token("OPERADOR_MAYOR", yytext()); }
 
-[0-9]+                         { return token("NUMERO", yytext()); }
-[A-Za-z][A-Za-z0-9]*          { return token("IDENTIFICADOR", yytext()); }
+"("                             { return token("PARENTESIS_ABRE", yytext()); }
+")"                             { return token("PARENTESIS_CIERRA", yytext()); }
+"{"                             { return token("LLAVE_ABRE", yytext()); }
+"}"                             { return token("LLAVE_CIERRA", yytext()); }
+";"                             { return token("PUNTO_COMA", yytext()); }
 
-.                              { return token("ERROR", yytext()); }
+[0-9]+                          { return token("NUMERO", yytext()); }
+[A-Za-z][A-Za-z0-9_]*           { return token("IDENTIFICADOR", yytext()); }
 
-<<EOF>>                        { return token("EOF", ""); }
+.                               { return token("ERROR", yytext()); }
+
+<<EOF>>                         { return token("EOF", ""); }
