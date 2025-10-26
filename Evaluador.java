@@ -124,13 +124,13 @@ public class Evaluador {
                     evaluar(ast.hijos.get(1));
                 else if (ast.hijos.size() > 2)
                     evaluar(ast.hijos.get(2));
-                return 0;
+                return returned ? returnValue : 0;
 
             case "While":
                 while (evaluar(ast.hijos.get(0)) != 0 && !returned) {
                     evaluar(ast.hijos.get(1));
                 }
-                return 0;
+                return returned ? returnValue : 0;
 
             default:
                 return evaluarHijos(ast);

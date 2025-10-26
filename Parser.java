@@ -538,7 +538,7 @@ class CUP$Parser$actions {
 		int s1right = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
 		Nodo s1 = (Nodo)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		
-              Nodo ifn = new Nodo("If", null, iffleft, iffright);
+              Nodo ifn = new Nodo("If", null, cond.linea, cond.columna);
               ifn.agregarHijo(cond);
               ifn.agregarHijo(s1);
               RESULT = ifn;
@@ -570,7 +570,7 @@ class CUP$Parser$actions {
 		int s2right = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
 		Nodo s2 = (Nodo)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		
-              Nodo ifelse = new Nodo("If", null, iffleft, iffright);
+              Nodo ifelse = new Nodo("If", null, cond.linea, cond.columna);
               ifelse.agregarHijo(cond);
               ifelse.agregarHijo(s1);
               ifelse.agregarHijo(s2);
@@ -594,7 +594,7 @@ class CUP$Parser$actions {
 		int sright = ((java_cup.runtime.Symbol)CUP$Parser$stack.peek()).right;
 		Nodo s = (Nodo)((java_cup.runtime.Symbol) CUP$Parser$stack.peek()).value;
 		
-            Nodo whileN = new Nodo("While", null, wleft, wright);
+            Nodo whileN = new Nodo("While", null, cond.linea, cond.columna);
             whileN.agregarHijo(cond);
             whileN.agregarHijo(s);
             RESULT = whileN;
